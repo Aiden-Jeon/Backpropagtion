@@ -27,7 +27,6 @@ class NeuralNetwork:
         self.parms['b1'] = np.zeros(1)
         self.parms['b2'] = np.zeros(1)
 
-    def _sigmoid(self,x): return 1/ (1+np.exp(-x))
     def _normalize(self,x): return (x-np.min(x,axis=0))/(np.max(x,axis=0)-np.min(x,axis=0)+0.01)
     def _forward(self,x,b,w): return(b + x.dot(w))
 
