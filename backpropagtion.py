@@ -10,7 +10,6 @@ class Activation:
             x[x<0] = 0  
             return x
             
-
     def backward(self,x):
         if self.func is 'sigmoid':
             return  x*(1-x)
@@ -44,22 +43,18 @@ class NeuralNetwork:
 
         for ep in range(epoch):
             for idx in range(len(x_train)):
+                #set parameters
                 wih = self.parms['wih']
                 who = self.parms['who']
                 b1 = self.parms['b1']
                 b2 = self.parms['b2']
-                
                 x_temp = np.array(self.x_train[idx],ndmin=2); y_temp = self.y_train[idx]
                 
                 hidden_out = self._active.forward(b1 + x_temp.dot(wih))
                 output_out = self._active.forward(b2 + hidden_out.dot(who))
-                
-                
-
-                #ho update & bias2
                 output_par = np.array((output_out - y_temp)* self._active.backward(output_out),ndmin=2)
                 hidden_par = np.array((output_par.dot(who.T) * self._active.backward(hidden_out)), ndmin=2)
-                
+                #update
                 self.parms['who'] = self.parms['who'] - lr * np.array(hidden_out,ndmin=2).T.dot(output_par)
                 self.parms['b2'] = self.parms['b2'] - lr * np.sum(output_par)
                 self.parms['wih'] = self.parms['wih'] - lr * np.array(x_temp,ndmin=2).T.dot(hidden_par)
