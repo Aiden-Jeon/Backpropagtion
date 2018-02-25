@@ -24,8 +24,8 @@ class NeuralNetwork:
         self.parms = {}
         self.parms['wih'] = np.random.normal(size=(input_layer,hidden_layer)) / np.sqrt(input_layer/2) 
         self.parms['who'] = np.random.normal(size=(hidden_layer,output_layer))/ np.sqrt(hidden_layer/2) 
-        self.parms['b1'] = np.zeros(1)
-        self.parms['b2'] = np.zeros(1)
+        self.parms['b1'] = np.zeros(hidden_layer)
+        self.parms['b2'] = np.zeros(output_layer)
 
     def _normalize(self,x): return (x-np.min(x,axis=0))/(np.max(x,axis=0)-np.min(x,axis=0)+0.01)
     def _forward(self,x,b,w): return(b + x.dot(w))
@@ -55,9 +55,9 @@ class NeuralNetwork:
                 hidden_par = np.array((output_par.dot(who.T) * self._active.backward(hidden_out)), ndmin=2)
                 #update
                 self.parms['who'] = self.parms['who'] - lr * np.array(hidden_out,ndmin=2).T.dot(output_par)
-                self.parms['b2'] = self.parms['b2'] - lr * np.sum(output_par)
+                self.parms['b2'] = self.parms['b2'] - lr * output_par
                 self.parms['wih'] = self.parms['wih'] - lr * np.array(x_temp,ndmin=2).T.dot(hidden_par)
-                self.parms['b1'] = self.parms['b1'] - lr * np.sum(hidden_par)
+                self.parms['b1'] = self.parms['b1'] - lr * hidden_par
                 
             if show_progress is True:
                 if ep % 100 == 0 :
