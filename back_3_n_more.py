@@ -33,7 +33,6 @@ class layers:
             out = activation().forward(out,active)
             out_back = activation().backward(out,active)
             return dict(out=out, out_back=out_back, weight=W, bias=b, active=active, net= X_t)
-    
     def train_data(self,shape=[None,None]):
         return np.zeros(shape[1])
 
@@ -80,22 +79,19 @@ class optimizer:
                 out_net[i] = out_net_temp
             return out_net
         
-        def recur_tmp(loss_val,out_net,net,weight,i):
-            if i == 0:
-                b_upd = loss_val.dot(out_net[i])
-                loss_val = loss_val.dot(out_net[i])
-                loss_val = net[i].reshape(net[i].shape[0],1).dot(loss_val.reshape(1,loss_val.shape[0]))
-                return b_upd, loss_val
-            else:
-                loss_val = (loss_val.dot(out_net[i])).dot(weight[i].T)
-                i -= 1
-                return recur_tmp(loss_val,out_net,net,weight,i)
-            
         def training(loss_val,out_net,out_back,weight,bias):
             w_update = dict(); b_update=dict()
             for idx in reversed(range(len(weight))):
-                loss_val = np.array(loss_val)
-                b_update[idx], w_update[idx] = recur_tmp(loss_val,out_net,net,weight,idx)
+                update = np.array(loss_val)
+                for i in reversed(range(idx,len(weight))):
+                    if i == idx:
+                        b_upd = (update.dot(out_net[i]))
+                        update = update.dot(out_net[i])
+                        update = net[i].reshape(net[i].shape[0],1).dot(update.reshape(1,update.shape[0]))
+                    else:
+                        update = (update.dot(out_net[i])).dot(weight[i].T)
+                w_update[idx] = update
+                b_update[idx] = b_upd
             return w_update, b_update
         
         ## 전체 data set 
@@ -112,10 +108,24 @@ class optimizer:
                     weight[i] = weight[i] - lr*w_update[i]
                     bias[i] = bias[i] - lr*b_update[i]
 
-            if ep % 100 == 0:
-                temp = activation().forward(np.array(x).dot(weight[0]),active[0])
+            if ep % 10 == 0:
+                temp = activation().forward(np.array(x).dot(weight[0])+bias[0],active[0])
                 for i in range(1,len(weight)):
-                    temp =  activation().forward(temp.dot(weight[i]),active[i])
+                    temp =  activation().forward(temp.dot(weight[i])+bias[i],active[i])
                 print(self.accuracy(temp,y))
                 
         return dict(weight=weight,bias=bias)
+
+#-------------------------------------------------
+#example
+W1 = layers().weight([3,4])
+W2 = layers().weight([4,2])
+W3 = layers().weight([2,3])
+x_t=[[1, 2, 3], [3, 4, 5], [6, 7, 8]]
+x_data = layers().train_data([3,3])
+layer1 = layers().layer(x_data,W1,[1,1,1,2])
+layer2 = layers().layer(layer1,W2,[1,2])
+layer3 = layers().layer(layer2,W3,[1,2,1])
+layer = [layer1,layer2,layer3]
+y= np.array([[1,0,0],[0,1,0],[0,0,1]])
+optimizer().SGD(x_t,y,layer,lr=0.01,loss_type='mse',epoch=10)
