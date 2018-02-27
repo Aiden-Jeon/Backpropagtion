@@ -24,24 +24,22 @@ class layers:
     def layer(self,X,W,b,active='sigmoid'):
         if type(X) is dict:
             X_t = X['out']
-            #out = activation().forward(X_t.dot(W)+b,active)
-            out = activation().forward(X_t.dot(W),active)
+            out = activation().forward(X_t.dot(W)+b,active)
             out_back = activation().backward(out,active)
             return dict(out=out, out_back=out_back, weight=W, bias=b, active=active, net= X_t)
         else:
             X_t = np.array(X)
-            #out = np.array(X_t).dot(W)+b
-            out = np.array(X_t).dot(W)
+            out = np.array(X_t).dot(W)+b
             out = activation().forward(out,active)
             out_back = activation().backward(out,active)
             return dict(out=out, out_back=out_back, weight=W, bias=b, active=active, net= X_t)
+    
     def train_data(self,shape=[None,None]):
         return np.zeros(shape[1])
 
 ##
 class optimizer:
     def loss(self,real,predict,loss_type='mse'):
-        #y[iteration],out[len(out)-1],
         if loss_type.lower() == 'mse':
             return np.array(predict) - np.array(real)
         if loss_type.lower() == 'cross_entropy':
@@ -82,19 +80,22 @@ class optimizer:
                 out_net[i] = out_net_temp
             return out_net
         
+        def recur_tmp(loss_val,out_net,net,weight,i):
+            if i == 0:
+                b_upd = loss_val.dot(out_net[i])
+                loss_val = loss_val.dot(out_net[i])
+                loss_val = net[i].reshape(net[i].shape[0],1).dot(loss_val.reshape(1,loss_val.shape[0]))
+                return b_upd, loss_val
+            else:
+                loss_val = (loss_val.dot(out_net[i])).dot(weight[i].T)
+                i -= 1
+                return recur_tmp(loss_val,out_net,net,weight,i)
+            
         def training(loss_val,out_net,out_back,weight,bias):
             w_update = dict(); b_update=dict()
             for idx in reversed(range(len(weight))):
-                update = np.array(loss_val)
-                for i in reversed(range(idx,len(weight))):
-                    if i == idx:
-                        b_upd = (update.dot(out_net[i]))
-                        update = update.dot(out_net[i])
-                        update = net[i].reshape(net[i].shape[0],1).dot(update.reshape(1,update.shape[0]))
-                    else:
-                        update = (update.dot(out_net[i])).dot(weight[i].T)
-                w_update[idx] = update
-                b_update[idx] = b_upd
+                loss_val = np.array(loss_val)
+                b_update[idx], w_update[idx] = recur_tmp(loss_val,out_net,net,weight,idx)
             return w_update, b_update
         
         ## 전체 data set 
@@ -102,23 +103,18 @@ class optimizer:
         for ep in range(epoch):
             for iteration in range(len(x)):
                 layer = layer_cal(x[iteration],weight,bias)
-                #print(layer)
                 out,out_back,_,_,active,net = dictionary(layer)
                 out_net = out_net_cal(out,out_back)
                 loss_val = self.loss(y[iteration],out[len(out)-1],loss_type)
-                #print(loss_val,out[len(out)-1])
                 w_update, b_update = training(loss_val,out_net,out_back,weight,bias)
-                #print(w_update,b_update)
                 ## update
                 for i in range(len(weight)):
                     weight[i] = weight[i] - lr*w_update[i]
                     bias[i] = bias[i] - lr*b_update[i]
-                ## feed_again
-            if ep % 10 == 0:
-                #temp = activation().forward(np.array(x).dot(weight[0])+bias[0],active[0])
+
+            if ep % 100 == 0:
                 temp = activation().forward(np.array(x).dot(weight[0]),active[0])
                 for i in range(1,len(weight)):
-                    #temp =  activation().forward(temp.dot(weight[i])+bias[i],active[i])
                     temp =  activation().forward(temp.dot(weight[i]),active[i])
                 print(self.accuracy(temp,y))
                 
