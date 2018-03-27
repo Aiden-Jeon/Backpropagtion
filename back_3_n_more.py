@@ -115,17 +115,3 @@ class optimizer:
                 print(self.accuracy(temp,y))
                 
         return dict(weight=weight,bias=bias)
-
-#-------------------------------------------------
-#example
-W1 = layers().weight([3,4])
-W2 = layers().weight([4,2])
-W3 = layers().weight([2,3])
-x_t=[[1, 2, 3], [3, 4, 5], [6, 7, 8]]
-x_data = layers().train_data([3,3])
-layer1 = layers().layer(x_data,W1,[1,1,1,2])
-layer2 = layers().layer(layer1,W2,[1,2])
-layer3 = layers().layer(layer2,W3,[1,2,1])
-layer = [layer1,layer2,layer3]
-y= np.array([[1,0,0],[0,1,0],[0,0,1]])
-optimizer().SGD(x_t,y,layer,lr=0.01,loss_type='mse',epoch=10)
