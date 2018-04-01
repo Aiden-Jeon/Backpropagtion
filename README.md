@@ -2,13 +2,13 @@
 Backpropagation with numpy
 
 # this is example code to use my model
-import pandas as pd
-import numpy as np
+import pandas as pd  
+import numpy as np  
 
-import layers
-import optimizer
+import layers  
+import optimizer  
 
-data = pd.read_csv('mnist_train_100.csv')
+data = pd.read_csv('mnist_train_100.csv')  
 
 y_data = data.values[:,0]
 x_data = data.values[:,1:]
