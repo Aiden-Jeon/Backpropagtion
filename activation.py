@@ -6,6 +6,9 @@ def forward(x,method='sigmoid'):
     if method.lower() == 'relu':
         x[x<0] = 0 
         return x
+    if method.lower() == 'softmax':
+        x = np.exp(x - np.max(x))
+        return x / np.sum(x)
 
 def backward(x,method='sigmoid'):
     x = np.array(x)
@@ -15,3 +18,8 @@ def backward(x,method='sigmoid'):
         x[x<0] = 0 
         x[x>0] = 1
         return x
+    if method.lower() == 'softmax':
+        x = np.exp(x - np.max(x))
+        return (np.sum(x)-x)/ np.sum(x)
+        
+

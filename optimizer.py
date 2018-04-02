@@ -5,6 +5,8 @@ import layers
 def _loss(real,predict,loss_type='mse'):
     if loss_type.lower() == 'mse':
         return np.array(predict) - np.array(real)
+    if loss_type.lower() == 'cross_entropy':
+        return -np.array(1/(predict))*np.array(real) + np.array(1/(1-predict))*(1-np.array(real))
 
 #accuracy [predict, real value]
 def accuracy(pred,real):
@@ -80,7 +82,7 @@ def GradientDescent(x,y,layer,loss_type,lr=0.01,epoch=10):
             w_log[i] = w_log[i]/(len(x)+1)
             weight[i] = weight[i] - lr*w_log[i]
             b_log[i] = b_log[i]/(len(x)+1)
-            bias[i] = bias[i] - lr*bias[i]
+            bias[i] = bias[i] - lr*b_log[i]
         
         if ep % 1000 == 0:
             temp = activation.forward(np.array(x).dot(weight[0])+bias[0],active[0])
